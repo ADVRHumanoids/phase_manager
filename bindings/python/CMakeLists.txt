@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 find_package(pybind11 QUIET)
-add_compile_options(-std=c++14)
+add_compile_options(-std=c++17)
 
 
 message(STATUS "check for pybind11")

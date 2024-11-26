@@ -1,6 +1,5 @@
 #include <phase_manager/ros_server_class.h>
-#include <phase_manager/Timeline.h>
-#include <phase_manager/TimelineArray.h>
+
 
 using namespace HorizonPhases;
 
@@ -12,17 +11,17 @@ RosServerClass::RosServerClass(PhaseManager::Ptr pm):
     _timelines = _pm->getTimelines();
 
 
-    if (!ros::isInitialized())
+    if (!rclcpp::ok())
     {
         std::cout << "Ros not initialized. Initializing." << std::endl;
         int argc = 0;
         char ** argv = nullptr;
-        ros::init(argc, argv, "phase_manager_ros_server_class");
+        rclcpp::init(argc, argv);
     }
 
-    _nh = std::make_unique<ros::NodeHandle>("");
-
-    init_publishers();
+    auto _nh = std::make_unique<rclcpp::Node>("phase_manager_ros_server_class");
+    _timelines_pub = _nh->create_publisher<phase_manager::msg::TimelineArray>("phase_manager/timelines", 10);
+    // init_publishers();
 }
 
 
@@ -31,17 +30,18 @@ void RosServerClass::init_publishers()
 
     // open publisher
     std::cout << "Opening topic for phase manager." << std::endl;
-    _timelines_pub = _nh->advertise<phase_manager::TimelineArray>("phase_manager/timelines", 10);
+    _timelines_pub = _nh->create_publisher<phase_manager::msg::TimelineArray>("phase_manager/timelines", 10);
+
 }
 
 void RosServerClass::run()
 {
 
-    phase_manager::TimelineArray timelines_msg;
+    phase_manager::msg::TimelineArray timelines_msg;
 
     for (auto pair : _timelines)
     {
-        phase_manager::Timeline timeline_msg;
+        phase_manager::msg::Timeline timeline_msg;
 
         timeline_msg.name = pair.first;
         auto phases = pair.second->getPhases();
@@ -64,6 +64,6 @@ void RosServerClass::run()
         timelines_msg.timelines.push_back(timeline_msg);
     }
 
-    _timelines_pub.publish(timelines_msg);
+    _timelines_pub->publish(timelines_msg);
 
 }
