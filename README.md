@@ -4,5 +4,5 @@ Manage  constraints and costs of a receding horizon control problem formulated u
 
 
 
-Current newest branch: ``new_architecture``
+Current newest branch: ``devel``
 
