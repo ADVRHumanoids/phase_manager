@@ -39,11 +39,11 @@ set(msg_files
 )
 
 
-rosidl_generate_interfaces(${PROJECT_NAME}_pk
+rosidl_generate_interfaces(${PROJECT_NAME}_msgs
     ${msg_files}
 )
 
-rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}_pk" "rosidl_typesupport_cpp")
+rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}_msgs" "rosidl_typesupport_cpp")
 
 add_library(${LIBRARY_TARGET_NAME} SHARED
   ${phase_manager_SRC}
@@ -58,7 +58,6 @@ target_link_libraries(${LIBRARY_TARGET_NAME}
     PUBLIC
     rclcpp::rclcpp
     "${cpp_typesupport_target}"
-    # ${PROJECT_NAME}__rosidl_typesupport_cpp
 )
 
 target_include_directories(${LIBRARY_TARGET_NAME}
