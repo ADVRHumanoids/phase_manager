@@ -112,39 +112,13 @@ int Timeline::_pos_to_absolute(int pos)
     return _phases[pos]->getPosition();
 }
 
-bool Timeline::_update_active_phases(std::vector<std::shared_ptr<PhaseToken>> phases)
+bool Timeline::update()
 {
     // compute active nodes inside the added phases
-    for (auto phase_token_i : phases)
+    for (auto phase_token_i : _phases)
     {
-        int initial_node = phase_token_i->getPosition();
-        int phase_nodes = phase_token_i->getNNodes();
-
-        // std::cout << "initial_node: " << initial_node << std::endl;
-        // set active node for each added phase
-        if (initial_node < _n_nodes)
-        {
-            int active_nodes = phase_nodes;
-            // phase is active (even if its tail falls outside the horizon)
-//            std::cout << "   --> Adding phase token (" << phase_token_i << ") '" << phase_token_i->getName() << "' to active phases" << std::endl;;
-            _active_phases.push_back(phase_token_i);
-
-            if (initial_node + active_nodes >= _n_nodes)
-            {
-                active_nodes -= initial_node + phase_nodes - _n_nodes;
-            }
-
-            for (int i = 0; i<active_nodes; i++)
-            {
-                phase_token_i->_get_active_nodes().push_back(i);
-            }
-
-//            std::cout << "        starting position: " << phase_token_i->getPosition() << std::endl;
-//            std::cout << "        active_nodes: " << active_nodes << "/" << phase_token_i->getNNodes() << std::endl;
-        }
         // update the phase tokens
         phase_token_i->update();
-//        std::cout << "============================" << std::endl;
     }
 
     return true;
@@ -194,6 +168,7 @@ bool Timeline::_insert_phase(std::shared_ptr<PhaseToken> phase_to_add, int phase
 {
 
     // if 'phase_pos' is beyond the horizon (outside of the active_phases), skip useless computation
+    bool flag_insert = false;
     if (phase_pos < _active_phases.size())
     {
 
@@ -208,14 +183,15 @@ bool Timeline::_insert_phase(std::shared_ptr<PhaseToken> phase_to_add, int phase
 //        }
 //        std::cout << std::endl;
 
+        flag_insert = true;
         // reset the items (holding all the active nodes)
         // TODO: should I do it only for the items before pos?
-        _reset(); // there is way, resetting phase by phase not the whole thing
+//        _reset(); // there is way, resetting phase by phase not the whole thing
         // otherwise I have to update like this
-        for (auto phase_i : _active_phases)
-        {
-            phase_i->update();
-        }
+//        for (auto phase_i : _active_phases)
+//        {
+//            phase_i->update();
+//        }
     }
 
     int phase_to_add_duration = phase_to_add->getNNodes();
@@ -228,7 +204,6 @@ bool Timeline::_insert_phase(std::shared_ptr<PhaseToken> phase_to_add, int phase
     }
     else
     {
-
         // shift all the phases in the tail (after the phase inserted)
         for (auto i = phase_pos; i < _phases.size(); i++)
         {
@@ -241,15 +216,34 @@ bool Timeline::_insert_phase(std::shared_ptr<PhaseToken> phase_to_add, int phase
         _phases.insert(_phases.begin() + phase_pos, phases_to_add.begin(), phases_to_add.end());
     }
 
-    // remove active nodes from phases to add, needs to be recomputed (all the phases that were active may not be active anymore after being pushed back)
+
     for (auto phase_token_i : phases_to_add)
     {
+        // remove active nodes from phases to add, needs to be recomputed (all the phases that were active may not be active anymore after being pushed back)
         phase_token_i->_get_active_nodes().clear();
+
+        int initial_node = phase_token_i->getPosition();
+        int phase_nodes = phase_token_i->getNNodes();
+
+        if (initial_node < _n_nodes)
+        {
+            int active_nodes = phase_nodes;
+            // phase is active (even if its tail falls outside the horizon)
+//            std::cout << "   --> Adding phase token (" << phase_token_i << ") '" << phase_token_i->getName() << "' to active phases" << std::endl;
+            _active_phases.push_back(phase_token_i);
+
+            if (initial_node + active_nodes >= _n_nodes)
+            {
+                active_nodes -= initial_node + phase_nodes - _n_nodes;
+            }
+
+            for (int i = 0; i<active_nodes; i++)
+            {
+                phase_token_i->_get_active_nodes().push_back(i);
+            }
+        }
     }
 
-    _update_active_phases(phases_to_add);
-
-//    std::cout << "------------------" << std::endl;
     return true;
 }
 
@@ -395,11 +389,11 @@ bool Timeline::shift()
             }
         }
 
-        // update every phase
-        for (auto phase : _phases)
-        {
-            phase->update();
-        }
+//         update every phase
+//        for (auto phase : _phases)
+//        {
+//            phase->update();
+//        }
     }
 
     return true;
