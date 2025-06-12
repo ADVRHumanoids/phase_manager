@@ -22,6 +22,7 @@ public:
     virtual std::string getName() = 0;
     virtual int getDim() = 0;
     virtual std::vector<int> getNodes() = 0;
+    virtual std::string getType() = 0;
 
     virtual bool reset() = 0;
 
@@ -67,6 +68,11 @@ public:
         return true;
     }
 
+    std::string getType()
+    {
+        return "item_with_bounds";
+    }
+
 protected:
     // do I need to initialize these?
     Eigen::MatrixXd _lower_bounds;
@@ -105,6 +111,11 @@ public:
         return true;
     }
 
+    std::string getType()
+    {
+        return "item_with_values";
+    }
+
 
 protected:
     // do I need to initialize these?
@@ -141,6 +152,12 @@ public:
         setWeightInternal(values);
         return true;
     }
+
+    std::string getType()
+    {
+        return "item_with_weight";
+    }
+
 
 
 protected:

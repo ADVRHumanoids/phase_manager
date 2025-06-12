@@ -21,6 +21,7 @@ public:
     std::string getName() { return _pyobj.attr("getName")().cast<std::string>(); }
     int getDim() {return _pyobj.attr("getDim")().cast<int>(); }
     std::vector<int> getNodes() {return _pyobj.attr("getNodes")().cast<std::vector<int>>(); }
+    std::string getType(){return "item_base";}
 
 
     bool setNodesInternal(std::vector<int> nodes, bool erasing)
@@ -55,6 +56,7 @@ struct PyObjWrapperWithBounds : ItemWithBoundsBase {
     int getDim() {return _pyobj.attr("getDim")().cast<int>(); }
     std::vector<int> getNodes() {return _pyobj.attr("getNodes")().cast<std::vector<int>>(); }
     std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> getBounds() {return _pyobj.attr("getBounds")().cast<std::tuple<Eigen::MatrixXd, Eigen::MatrixXd>>(); }
+    std::string getType(){return "item_with_bounds";}
 
     bool reset()
     {
@@ -116,6 +118,7 @@ struct PyObjWrapperWithValues : ItemWithValuesBase {
     int getDim() {return _pyobj.attr("getDim")().cast<int>(); }
     std::vector<int> getNodes() {return _pyobj.attr("getNodes")().cast<std::vector<int>>(); }
     Eigen::MatrixXd getValues() {return _pyobj.attr("getValues")().cast<Eigen::MatrixXd>(); }
+    std::string getType(){return "item_with_values";}
 
     bool reset()
     {
@@ -162,6 +165,7 @@ struct PyObjWrapperWithWeight : ItemWithWeightBase {
     int getDim() {return _pyobj.attr("getDim")().cast<int>(); }
     std::vector<int> getNodes() {return _pyobj.attr("getNodes")().cast<std::vector<int>>(); }
     Eigen::MatrixXd getWeight() {return _pyobj.attr("getWeight")().cast<Eigen::MatrixXd>(); }
+    std::string getType(){return "item_with_weight";}
 
     bool reset()
     {

@@ -57,26 +57,36 @@ Phase::Ptr Timeline::createPhase(int n_nodes, std::string name)
 bool Timeline::addElement(std::shared_ptr<ItemBase> element)
 {
     // registering the items inside the phase_manager, if not already registered
-//    std::cout << "registering element: " << element->getName() << " (" << element << ")" << std::endl;
+    std::cout << "Registering element: " << element->getName() << " (" << element << typeid(*element).name() << ")" << std::endl;
+
     auto it = _elements.find(element->getName());
 
     if (it != _elements.end())
     {
-        std::cout << "element " << element->getName() << "already present" << std::endl;
+        std::cout << "Element with name '" << element->getName() << "' already present" << std::endl;
+//        std::cout << " element to be added --> typeid (" << typeid(*element).name() << ")" << std::endl;
 
-//        std::cout << " element to be inserted typeid (" << typeid(*it).name() << ")" << std::endl;
-//        std::cout << " element already present typeid (" << typeid(*element).name() << ")" << std::endl;
+        std::cout << "Element to be added has type: '" << element->getType() << "'. Checking if item with same type is already inserted..." << std::endl;
+
+        for (auto el : it->second)
+        {
+            if (element->getType() == el->getType())
+            {
+                std::cout << "Found element already present with type: '" << el->getType() << "'. Skipping. " << std::endl;
+                return false;
+            }
+        }
 
 //        if (typeid(*it) == typeid(*element))
 //        {
-        return false;
+//        return false;
 //        }
 
     }
 
 
 //    std::cout << " ========== " << std::endl;
-
+    std::cout << "Element added. " << std::endl;
     _elements[element->getName()].push_back(element);
 
     return true;
@@ -415,14 +425,14 @@ bool Timeline::_reset()
 //    std::cout << "--------- resetting phases: ----------" << std::endl;
     for (auto const & [name, items] : _elements)
     {
-//        std::cout << name << " (" << item << ") changed? " << item->isChanged() << std::endl;
         for (auto item : items)
         {
+            std::cout << name << " (" << item->getName() << ") changed? " << item->isChanged() << std::endl;
             if (item->isChanged())
             {
-    //            std::cout << "resetting item..." << std::endl;
+                std::cout << "resetting item " << item->getName() << std::endl;
                 item->reset();
-    //             std::cout << "done" << std::endl;
+                 std::cout << "done" << std::endl;
             }
         }
     }

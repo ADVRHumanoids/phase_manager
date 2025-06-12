@@ -12,6 +12,12 @@ PhaseManager::PhaseManager(int n_nodes, bool debug):
 Timeline::Ptr PhaseManager::createTimeline(std::string name)
 {
     Timeline::Ptr timeline = std::make_shared<Timeline>(*this, _n_nodes, name, _debug);
+
+    if (_timelines.find(name) != _timelines.end()) 
+    {
+        return nullptr;
+    }
+
     _timelines[name]= timeline;
     return timeline;
 }

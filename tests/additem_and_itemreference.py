@@ -60,30 +60,36 @@ fake_item = FakeItem(par, weight)
 pm = pymanager.PhaseManager(ns)
 timeline_1 = pm.createTimeline('timeline_1')
 phase_1 = timeline_1.createPhase(5, 'phase_1')
+phase_2 = timeline_1.createPhase(5, 'phase_2')
 
 traj_1 = np.array([[1, 2, 3, 4, 5],
                    [1, 2, 3, 4, 5],
                    [1, 2, 3, 4, 5]])
 
 phase_1.addItemReference(fake_item, traj_1)
+phase_2.addItemReference(fake_item, traj_1)
 
 weights_1 = np.array([[0.1, 0.1, 0.5, 0.1, 0.1]])
 
 phase_1.addItemWeight(fake_item, weights_1)
 
+
 timeline_1.addPhase(phase_1)
+
+pm.update()
 
 print('values after adding phase: \n', par.getValues())
 # print('nodes after adding phase: \n', par.getNodes())
 print('weights after adding phase: \n', weight.getValues())
 
-
 # print('==========================================================')
+print('SHIFTING: ')
 for i in range(2):
     pm.shift()
-    print('values after shifting: \n', par.getValues())
+    pm.update()
+    print(f'values after shifting ({i}): \n', par.getValues())
     # print('nodes after adding phase: \n', par.getNodes())
-    print('weights after adding phase: \n', weight.getValues())
+    print(f'weights after adding phase ({i}): \n', weight.getValues())
 
 print("modifying phase: ")
 timeline_1.getPhases()[0].setItemReference('fake_item', np.array([[10, 20, 30, 40, 50],
