@@ -427,12 +427,12 @@ bool Timeline::_reset()
     {
         for (auto item : items)
         {
-            std::cout << name << " (" << item->getName() << ") changed? " << item->isChanged() << std::endl;
+            // std::cout << name << " (" << item->getName() << ") changed? " << item->isChanged() << std::endl;
             if (item->isChanged())
             {
-                std::cout << "resetting item " << item->getName() << std::endl;
+                // std::cout << "resetting item " << item->getName() << std::endl;
                 item->reset();
-                 std::cout << "done" << std::endl;
+                //  std::cout << "done" << std::endl;
             }
         }
     }
