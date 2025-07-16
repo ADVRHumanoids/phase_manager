@@ -57,7 +57,7 @@ Phase::Ptr Timeline::createPhase(int n_nodes, std::string name)
 bool Timeline::addElement(std::shared_ptr<ItemBase> element)
 {
     // registering the items inside the phase_manager, if not already registered
-    std::cout << "Registering element: " << element->getName() << " (" << element << typeid(*element).name() << ")" << std::endl;
+    // std::cout << "Registering element: " << element->getName() << " (" << element << typeid(*element).name() << ")" << std::endl;
 
     auto it = _elements.find(element->getName());
 
@@ -86,7 +86,7 @@ bool Timeline::addElement(std::shared_ptr<ItemBase> element)
 
 
 //    std::cout << " ========== " << std::endl;
-    std::cout << "Element added. " << std::endl;
+    // std::cout << "Element added. " << std::endl;
     _elements[element->getName()].push_back(element);
 
     return true;
