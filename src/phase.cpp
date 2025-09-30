@@ -346,7 +346,8 @@ bool Phase::_init_nodes(int n_nodes)
 
 PhaseToken::PhaseToken(Phase::Ptr phase):
     _abstract_phase(phase),
-    _initial_node(0)
+    _initial_node(0),
+    _changed_ref(false)
 {
 
     // copy construct a private info container
@@ -404,11 +405,12 @@ bool PhaseToken::setItemReference(std::string item_name, Eigen::MatrixXd values)
     {
         if (name == item_name)
         {
+            std::cout << "[Phase Manager: name cloned ref] = " << name << std::endl; 
             std::static_pointer_cast<ItemReferenceManager>(item)->setValues(values);
             return true;
         }
     }
-
+        
     return false;
 }
 
@@ -512,6 +514,16 @@ bool PhaseToken::_set_position(int initial_node)
     return true;
 }
 
+bool PhaseToken::setChangedRef()
+{
+    _changed_ref = true;
+    return true; 
+}
+
+bool PhaseToken::getChangedRef()
+{
+    return _changed_ref; 
+}
 //bool PhaseToken::_set_position(int initial_node)
 //{
 //    _initial_node = initial_node;

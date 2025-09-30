@@ -616,6 +616,8 @@ PYBIND11_MODULE(pyphase, m) {
             .def("setItemReference", &PhaseToken::setItemReference)
             .def("setItemWeight", &PhaseToken::setItemWeight)
             .def("setItemNodes", &PhaseToken::setItemNodes)
+            .def("setChangedRef", &PhaseToken::setChangedRef)
+            .def("getChangedRef", &PhaseToken::getChangedRef)
             .def("update", &PhaseToken::update)
             ;
 }

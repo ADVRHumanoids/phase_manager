@@ -570,6 +570,9 @@ public:
 
     bool setItemWeight(std::string item_name,
                        Eigen::MatrixXd weight);
+    
+    bool setChangedRef();
+    bool getChangedRef(); 
 
     bool update();
 
@@ -582,6 +585,7 @@ private:
     Phase::Ptr _abstract_phase;
     std::vector<int> _active_nodes;
     int _initial_node;
+    bool _changed_ref; 
 
     // change ref of single phasetoken
 //    std::vector<ItemReferenceManager::Ptr> _item_refs_token;
