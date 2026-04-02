@@ -30,15 +30,18 @@ generate_messages(
   std_msgs
 )
 
-catkin_package()
-
 set(LIBRARY_TARGET_NAME phase_manager) # set library name
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES ${LIBRARY_TARGET_NAME}
+)
+
 
 set(phase_manager_SRC
     src/phase_manager.cpp
     src/timeline.cpp
     src/phase.cpp
-
     )
 
 set(phase_manager_ros_SRC
@@ -58,6 +61,10 @@ target_link_libraries(${LIBRARY_TARGET_NAME}
 target_include_directories(${LIBRARY_TARGET_NAME}
     INTERFACE
     ${EIGEN3_INCLUDE_DIR})
+
+install(DIRECTORY include/phase_manager/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
 
 install(TARGETS  ${LIBRARY_TARGET_NAME}
         EXPORT   ${LIBRARY_TARGET_NAME}

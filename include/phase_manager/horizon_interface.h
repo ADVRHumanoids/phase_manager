@@ -175,10 +175,13 @@ public:
     Wrapper(std::shared_ptr<T> item):
         m_item(item) {}
 
-    bool setNodesInternal(std::vector<int> nodes) { return m_item->setNodes(nodes); }
+    bool setNodesInternal(std::vector<int> nodes, bool erasing){ return m_item->setNodes(nodes, erasing); }
     std::string getName() { return m_item->getName(); }
     int getDim() { return m_item->getDim(); }
     std::vector<int> getNodes() { return m_item->getNodes(); }
+    std::string getType() {return "item_base";}
+
+    bool reset(){m_item->setNodes({}, true); return true;}
 
 private:
 
@@ -210,6 +213,8 @@ public:
     std::vector<int> getNodes() { return m_item->getNodes(); }
 
     std::string getName() { return m_item->getName(); }
+
+    bool reset(){m_item->setNodes({}, true); return true;}
 
 private:
 
