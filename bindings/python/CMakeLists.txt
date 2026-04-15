@@ -32,10 +32,16 @@ if(${pybind11_FOUND})
     install(TARGETS pymanager
             DESTINATION ${PYTHON_SITE}/${PROJECT_NAME})
 
-    pybind11_add_module(pyrosserver pyRosServer.cpp)
-    target_link_libraries(pyrosserver PUBLIC phase_manager)
-    install(TARGETS pyrosserver
-            DESTINATION ${PYTHON_SITE}/${PROJECT_NAME})
+    # pyrosserver requires ROS — only build it when catkin is available
+    if(catkin_FOUND)
+        pybind11_add_module(pyrosserver pyRosServer.cpp)
+        target_link_libraries(pyrosserver PUBLIC phase_manager_ros ${catkin_LIBRARIES})
+        install(TARGETS pyrosserver
+                DESTINATION ${PYTHON_SITE}/${PROJECT_NAME})
+        message(STATUS "[phase_manager/python] pyrosserver enabled (ROS found)")
+    else()
+        message(STATUS "[phase_manager/python] pyrosserver SKIPPED (ROS not found)")
+    endif()
 
     install(FILES __init__.py DESTINATION ${PYTHON_SITE}/${PROJECT_NAME})
 #    include_directories(${CMAKE_CURRENT_SOURCE_DIR})

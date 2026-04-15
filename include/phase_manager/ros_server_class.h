@@ -1,6 +1,10 @@
 #ifndef ROS_SERVER_CLASS_H
 #define ROS_SERVER_CLASS_H
 
+// #ifndef PHASE_MANAGER_ROS_ENABLED
+// #  error "ros_server_class.h requires ROS. Only include it when PHASE_MANAGER_ROS_ENABLED is defined (i.e. catkin is available)."
+// #endif
+
 #include <phase_manager/phase_manager.h>
 #include <phase_manager/timeline.h>
 #include <phase_manager/phase.h>
