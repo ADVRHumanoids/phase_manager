@@ -459,6 +459,7 @@ public:
 
     std::vector<ItemBase::Ptr> getItems();
     std::vector<ItemWithValuesBase::Ptr> getItemsReference();
+    std::vector<ItemWithWeightBase::Ptr> getItemWeights();
 
     std::vector<ItemWithBoundsBase::Ptr> getConstraints();
     std::vector<ItemBase::Ptr> getCosts();
@@ -590,6 +591,13 @@ private:
     std::unordered_map<std::string, ItemWeightManager::Ptr> _cloned_weight_elements;
     std::unordered_map<std::string, ItemReferenceManager::Ptr> _cloned_ref_elements;
     std::unordered_map<std::string, ParameterManager::Ptr> _cloned_par_elements;
+
+    // Pre-resolved element pointers for zero-RTTI update loop
+    std::vector<NodesManager::Ptr> _resolved_elements;
+
+    // Scratch buffers to avoid per-call allocation in _compute_horizon_nodes
+    std::vector<int> _tmp_active_item_nodes;
+    std::vector<int> _tmp_horizon_nodes;
 
     std::pair<std::vector<int>, std::vector<int>> _compute_horizon_nodes(std::vector<int> nodes, int initial_node);
 

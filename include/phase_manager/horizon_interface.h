@@ -241,12 +241,39 @@ public:
     std::vector<int> getNodes() { return m_item->getNodes(); }
     std::string getName() { return m_item->getName(); }
 
+    bool reset() { m_item->setNodes({}, true); return true; }
+
 private:
 
     std::shared_ptr<T> m_item;
 };
 
+template <typename T>
+class WrapperWithWeight : public ItemWithWeightBase
+{
+public:
+    WrapperWithWeight(std::shared_ptr<T> item):
+        m_item(item)
+        {
+            _weights = Eigen::MatrixXd::Ones(1, std::max((int)getNodes().size(), 1));
+            _initial_weights = _weights;
+        }
 
+    bool setNodesInternal(std::vector<int> nodes, bool erasing) { return m_item->setNodes(nodes, erasing); }
+
+    bool setWeightInternal(Eigen::MatrixXd values) { return m_item->setWeight(values); }
+    bool setWeightInternal(Eigen::MatrixXd values, std::vector<int> nodes) { return m_item->setWeight(values, nodes); }
+    Eigen::MatrixXd getWeight() { return m_item->getWeight(); }
+    int getDim() { return m_item->getDim(); }
+    std::vector<int> getNodes() { return m_item->getNodes(); }
+    std::string getName() { return m_item->getName(); }
+
+    bool reset() { m_item->setNodes({}, true); return true; }
+
+private:
+
+    std::shared_ptr<T> m_item;
+};
 
 
 #endif

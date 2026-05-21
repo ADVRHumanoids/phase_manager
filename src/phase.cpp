@@ -224,6 +224,11 @@ std::vector<ItemWithValuesBase::Ptr> Phase::getItemsReference()
     return _items_ref;
 }
 
+std::vector<ItemWithWeightBase::Ptr> Phase::getItemWeights()
+{
+    return _items_weight;
+}
+
 std::vector<ItemWithBoundsBase::Ptr> Phase::getConstraints()
 {
     return _constraints;
@@ -371,6 +376,37 @@ PhaseToken::PhaseToken(Phase::Ptr phase):
         }
 
     }
+
+    // Pre-resolve element pointers: use clone if available, otherwise original.
+    // This eliminates all dynamic_pointer_cast and map lookups from the hot update() loop.
+    for (auto element : _abstract_phase->getElements())
+    {
+        const std::string& name = element->getName();
+        NodesManager::Ptr resolved = element;
+
+        auto it_ref = _cloned_ref_elements.find(name);
+        if (it_ref != _cloned_ref_elements.end())
+        {
+            resolved = it_ref->second;
+        }
+        else
+        {
+            auto it_w = _cloned_weight_elements.find(name);
+            if (it_w != _cloned_weight_elements.end())
+            {
+                resolved = it_w->second;
+            }
+            else
+            {
+                auto it_p = _cloned_par_elements.find(name);
+                if (it_p != _cloned_par_elements.end())
+                {
+                    resolved = it_p->second;
+                }
+            }
+        }
+        _resolved_elements.push_back(resolved);
+    }
 }
 
 
@@ -456,53 +492,19 @@ Phase::Ptr PhaseToken::get_phase()
 
 std::pair<std::vector<int>, std::vector<int>> PhaseToken::_compute_horizon_nodes(std::vector<int> nodes, int initial_node)
 {
-    /***
-     * input:
-     * item nodes inside the phase (relative nodes)
-     * initial node of the phase (position of phase in horizon)
+    _tmp_active_item_nodes.clear();
 
-     * output:
-     * active nodes of item relative to the phase
-     * absolute nodes in horizon
-
-     * _active_nodes: active nodes of the phase (relative nodes)
-     * nodes: nodes of the item (relative nodes)
-     * initial_node: where the phase is positioned in the horizon, in terms of node
-     * active_item_nodes: item nodes in phase that are active (intersection between active node of the phase and nodes of the item in the phase)
-     * horizon_nodes: active nodes of item in horizon
-
-    ***/
-
-    std::vector<int> active_item_nodes; // Vector to store positions of elements in 'nodes' that are in '_active_nodes'
-
-    // check which node of the item (constraint, cost, var...) is active inside the phase, given the active nodes of the phase
     std::set_intersection(nodes.begin(), nodes.end(),
                           _active_nodes.begin(), _active_nodes.end(),
-                          std::back_inserter(active_item_nodes));
+                          std::back_inserter(_tmp_active_item_nodes));
 
-
-
-    std::vector<int> horizon_nodes(active_item_nodes.size());
-    // active phase nodes             : [2 3 4 5]
-    // active nodes of item in phase  : [3 4]
-    // phase position in horizon      : 7
-    // item node position in horizon  : 7 + 3 (node 0 of 'active nodes') = 10
-    // item node position in horizon  : 7 + 4 (node 1 of 'active nodes') = 11
-    for (int node_i = 0; node_i < horizon_nodes.size(); node_i++)
+    _tmp_horizon_nodes.resize(_tmp_active_item_nodes.size());
+    for (int node_i = 0; node_i < (int)_tmp_horizon_nodes.size(); node_i++)
     {
-        horizon_nodes[node_i] = initial_node + active_item_nodes[node_i];
+        _tmp_horizon_nodes[node_i] = initial_node + _tmp_active_item_nodes[node_i];
     }
 
-//    std::cout << "    initial_node: " << initial_node << std::endl;
-//    std::cout << "      active item nodes: ";
-//    for (auto node_i : active_item_nodes)
-//    {
-//        std::cout << node_i << " ";
-//    }
-//    std::cout << std::endl;
-//    std::cout << "------" << std::endl;
-
-    return std::make_pair(active_item_nodes, horizon_nodes);
+    return std::make_pair(_tmp_active_item_nodes, _tmp_horizon_nodes);
 
 }
 
@@ -523,42 +525,27 @@ bool PhaseToken::update()
      * update items contained in phase in horizon based on the position of the phase
      */
 
-//    std::cout << "   -> updating phase: '" << getName() << "' at node: " << _initial_node << std::endl;
     if (!_active_nodes.empty())
     {
-
-        for (auto element : _abstract_phase->getElements())
+        // Use pre-resolved element list: no dynamic_pointer_cast, no map lookups in hot path
+        const auto& phase_elements = _abstract_phase->getElements();
+        for (size_t i = 0; i < _resolved_elements.size(); i++)
         {
-            auto it = element;
-            if (std::dynamic_pointer_cast<ItemReferenceManager>(it))
+            // compute horizon nodes in-place using scratch buffers (no heap allocation)
+            _tmp_active_item_nodes.clear();
+            const auto& selected = phase_elements[i]->getSelectedNodes();
+            std::set_intersection(selected.begin(), selected.end(),
+                                  _active_nodes.begin(), _active_nodes.end(),
+                                  std::back_inserter(_tmp_active_item_nodes));
+
+            _tmp_horizon_nodes.resize(_tmp_active_item_nodes.size());
+            for (int n = 0; n < (int)_tmp_active_item_nodes.size(); n++)
             {
-                if (_cloned_ref_elements.find(element->getName()) != _cloned_ref_elements.end())
-                {
-                        it = _cloned_ref_elements[element->getName()];
-                }
-            }
-            if (std::dynamic_pointer_cast<ItemWeightManager>(it))
-            {
-                if (_cloned_weight_elements.find(element->getName()) != _cloned_weight_elements.end())
-                {
-                        it = _cloned_weight_elements[element->getName()];
-                }
-            }
-            if (std::dynamic_pointer_cast<ParameterManager>(it))
-            {
-                if (_cloned_par_elements.find(element->getName()) != _cloned_par_elements.end())
-                {
-                        it = _cloned_par_elements[element->getName()];
-                }
+                _tmp_horizon_nodes[n] = _initial_node + _tmp_active_item_nodes[n];
             }
 
-//            std::cout << "        --> element updated: " << element->getName() << std::endl;
-            auto pair_nodes = _compute_horizon_nodes(element->getSelectedNodes(), _initial_node);
-
-            it->update(pair_nodes.first, pair_nodes.second);
+            _resolved_elements[i]->update(_tmp_active_item_nodes, _tmp_horizon_nodes);
         }
-
-//        std::cout << "===========================" << std::endl;
     }
     return true;
 

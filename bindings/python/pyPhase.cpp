@@ -458,6 +458,36 @@ auto _get_costs_list(Phase& phase)
 
 }
 
+auto _get_items_reference_list(Phase& phase)
+{
+    auto elems = phase.getItemsReference();
+
+    std::vector<py::object> py_elem_list;
+
+    for (auto it : elems)
+    {
+        py_elem_list.push_back(std::dynamic_pointer_cast<PyObjWrapperWithValues>(it)->getPyObject());
+    }
+
+    return py_elem_list;
+
+}
+
+auto _get_item_weights_list(Phase& phase)
+{
+    auto elems = phase.getItemWeights();
+
+    std::vector<py::object> py_elem_list;
+
+    for (auto it : elems)
+    {
+        py_elem_list.push_back(std::dynamic_pointer_cast<PyObjWrapperWithWeight>(it)->getPyObject());
+    }
+
+    return py_elem_list;
+
+}
+
 //auto _get_constraints_map(Phase& phase)
 //{
 //    auto constraints = phase.getConstraintsInfo();
@@ -600,6 +630,8 @@ PYBIND11_MODULE(pyphase, m) {
 //            .def("getCostsInfo", _get_costs_map)
 //            .def("getVariablesInfo", _get_variables_map)
             .def("getItems", _get_items_list)
+            .def("getItemReferences", _get_items_reference_list)
+            .def("getItemWeights", _get_item_weights_list)
             .def("getParameters", _get_parameters_list)
             .def("getCosts", _get_costs_list)
             .def("getVariables", _get_variables_list)
