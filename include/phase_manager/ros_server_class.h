@@ -1,14 +1,11 @@
 #ifndef ROS_SERVER_CLASS_H
 #define ROS_SERVER_CLASS_H
 
-// #ifndef PHASE_MANAGER_ROS_ENABLED
-// #  error "ros_server_class.h requires ROS. Only include it when PHASE_MANAGER_ROS_ENABLED is defined (i.e. catkin is available)."
-// #endif
-
 #include <phase_manager/phase_manager.h>
 #include <phase_manager/timeline.h>
 #include <phase_manager/phase.h>
-#include <ros/ros.h>
+#include <phase_manager/msg/timeline_array.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 namespace HorizonPhases {
 
@@ -25,12 +22,12 @@ namespace HorizonPhases {
 
             void init_publishers();
 
-            std::unique_ptr<ros::NodeHandle> _nh;
+            rclcpp::Node::SharedPtr _node;
             PhaseManager::Ptr _pm;
 
             std::unordered_map<std::string, Timeline::Ptr> _timelines;
 
-            ros::Publisher _timelines_pub;
+            rclcpp::Publisher<phase_manager::msg::TimelineArray>::SharedPtr _timelines_pub;
 
     };
 

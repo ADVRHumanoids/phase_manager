@@ -3,10 +3,14 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHB
 from PyQt5.QtGui import QPainter, QColor, QBrush, QPainterPath, QPen, QFont
 from PyQt5.QtCore import Qt, QTimer, QRectF
 
-import rospy
 import random
-from timelines_widget import TimelinesWidget
-from ros_client_class import TimelineROS, PhaseInfo, TimelineInfo
+
+try:
+    from .timelines_widget import TimelinesWidget
+    from .ros_client_class import TimelineROS, PhaseInfo, TimelineInfo
+except ImportError:
+    from timelines_widget import TimelinesWidget
+    from ros_client_class import TimelineROS, PhaseInfo, TimelineInfo
 
 class PhaseManagerGUI(QMainWindow):
     def __init__(self, timeline_ros: TimelineROS, n_nodes):
@@ -113,6 +117,7 @@ class PhaseManagerGUI(QMainWindow):
 
     def update(self):
         if self.running:
+            self.timeline_ros.spin_once()
             self.timelines_widget.update_timeline()
 
 

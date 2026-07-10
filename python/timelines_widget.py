@@ -3,7 +3,10 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHB
     QAction, QTextEdit, QSizePolicy, QStyleOptionFrame, QStyle
 from PyQt5.QtGui import QPainter, QColor, QBrush, QPainterPath, QPen, QFont, QFontMetrics, QCursor
 from PyQt5.QtCore import Qt, QTimer, QRectF, pyqtSignal, QSize
-from ros_client_class import TimelineROS, PhaseInfo, TimelineInfo
+try:
+    from .ros_client_class import TimelineROS, PhaseInfo, TimelineInfo
+except ImportError:
+    from ros_client_class import TimelineROS, PhaseInfo, TimelineInfo
 import hashlib
 import random
 

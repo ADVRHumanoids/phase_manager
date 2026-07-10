@@ -1,42 +1,50 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.16)
 
-project(phase_manager LANGUAGES CXX VERSION 0.1.0)
+project(phase_manager LANGUAGES C CXX VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ============================================================
-# Dependencies
-# ============================================================
-
+find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
-# ROS is optional — only required for the ROS server component
-find_package(catkin QUIET COMPONENTS
-    roscpp
-    message_generation
+set(msg_files
+    msg/Timeline.msg
+    msg/TimelineArray.msg
 )
 
-# ============================================================
-# Core library (no ROS)
-# ============================================================
+rosidl_generate_interfaces(${PROJECT_NAME}
+    ${msg_files}
+)
 
-set(LIBRARY_TARGET_NAME phase_manager)
+rosidl_get_typesupport_target(cpp_typesupport_target
+    ${PROJECT_NAME}
+    rosidl_typesupport_cpp
+)
 
-set(phase_manager_SRC
+ament_get_python_install_dir(PYTHON_INSTALL_DIR)
+
+set(LIBRARY_TARGET_NAME phase_manager_core)
+
+add_library(${LIBRARY_TARGET_NAME} SHARED
     src/phase_manager.cpp
     src/timeline.cpp
     src/phase.cpp
 )
 
-add_library(${LIBRARY_TARGET_NAME} SHARED
-    ${phase_manager_SRC}
+set_target_properties(${LIBRARY_TARGET_NAME}
+    PROPERTIES
+        OUTPUT_NAME phase_manager
+        EXPORT_NAME phase_manager
 )
 
 target_include_directories(${LIBRARY_TARGET_NAME}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-        $<INSTALL_INTERFACE:include/${LIBRARY_TARGET_NAME}>
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+        "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 
 target_link_libraries(${LIBRARY_TARGET_NAME}
@@ -44,86 +52,63 @@ target_link_libraries(${LIBRARY_TARGET_NAME}
         Eigen3::Eigen
 )
 
-# ============================================================
-# ROS server component (optional, only built when catkin found)
-# ============================================================
+add_library(phase_manager_ros SHARED
+    src/ros_server_class.cpp
+)
 
-if(catkin_FOUND)
+target_include_directories(phase_manager_ros
+    PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+        "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
-    add_message_files(
-        FILES
-        Timeline.msg
-        TimelineArray.msg
-    )
+target_link_libraries(phase_manager_ros
+    PUBLIC
+        ${LIBRARY_TARGET_NAME}
+        rclcpp::rclcpp
+        "${cpp_typesupport_target}"
+)
 
-    generate_messages(
-        DEPENDENCIES
-        std_msgs
-    )
-
-    catkin_package(
-        INCLUDE_DIRS include
-        LIBRARIES ${LIBRARY_TARGET_NAME} phase_manager_ros
-    )
-
-    set(LIBRARY_TARGET_NAME_ROS phase_manager_ros)
-
-    add_library(${LIBRARY_TARGET_NAME_ROS} SHARED
-        src/ros_server_class.cpp
-    )
-
-    target_include_directories(${LIBRARY_TARGET_NAME_ROS}
-        PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<INSTALL_INTERFACE:include>
-            ${catkin_INCLUDE_DIRS}
-    )
-
-    target_link_libraries(${LIBRARY_TARGET_NAME_ROS}
-        PUBLIC
-            ${LIBRARY_TARGET_NAME}
-            ${catkin_LIBRARIES}
-    )
-
-    # Propagate the ROS-enabled flag to anything that links phase_manager_ros
-    target_compile_definitions(${LIBRARY_TARGET_NAME_ROS}
-        PUBLIC PHASE_MANAGER_ROS_ENABLED
-    )
-
-    install(TARGETS ${LIBRARY_TARGET_NAME_ROS}
-        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
-        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib
-        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
-    )
-
-    message(STATUS "[phase_manager] ROS components enabled (catkin found)")
-
-else()
-
-    message(STATUS "[phase_manager] ROS components disabled (catkin NOT found)")
-
-endif()
-
-# ============================================================
-# Install core library
-# ============================================================
-
-install(DIRECTORY include/${LIBRARY_TARGET_NAME}
-    DESTINATION include/${LIBRARY_TARGET_NAME}
+target_compile_definitions(phase_manager_ros
+    PUBLIC PHASE_MANAGER_ROS_ENABLED
 )
 
 install(
-    TARGETS ${LIBRARY_TARGET_NAME}
-    EXPORT ${LIBRARY_TARGET_NAME}Targets
-    DESTINATION lib
+    TARGETS ${LIBRARY_TARGET_NAME} phase_manager_ros
+    EXPORT ${PROJECT_NAME}Targets
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
 )
 
-include(cmake/ExportProject.cmake)
-export_project()
+install(
+    DIRECTORY include/
+    DESTINATION include/${PROJECT_NAME}
+)
 
-# ============================================================
-# Subdirectories
-# ============================================================
+install(
+    EXPORT ${PROJECT_NAME}Targets
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION share/${PROJECT_NAME}/cmake
+)
 
-add_subdirectory(bindings/python/)
-add_subdirectory(tests/)
+install(
+    FILES
+        python/gui.py
+        python/ros_client_class.py
+        python/timelines_widget.py
+    DESTINATION "${PYTHON_INSTALL_DIR}/${PROJECT_NAME}"
+)
+
+add_subdirectory(bindings/python)
+add_subdirectory(tests)
+
+ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
+ament_export_dependencies(
+    Eigen3
+    rclcpp
+    rosidl_default_runtime
+)
+
+ament_package()

@@ -1,49 +1,35 @@
-cmake_minimum_required(VERSION 3.5)
 find_package(pybind11 QUIET)
-add_compile_options(-std=c++14)
-
 
 message(STATUS "check for pybind11")
 if(${pybind11_FOUND})
 
     message(STATUS "compiling python bindings")
 
-    execute_process(
-      COMMAND "${PYTHON_EXECUTABLE}" -c "if True:
-        from distutils import sysconfig as sc
-        print(sc.get_python_lib(prefix='', plat_specific=True))"
-      OUTPUT_VARIABLE PYTHON_SITE
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     pybind11_add_module(pyphase pyPhase.cpp)
-    target_link_libraries(pyphase PUBLIC phase_manager)
+    target_link_libraries(pyphase PUBLIC ${LIBRARY_TARGET_NAME})
     install(TARGETS pyphase
-            DESTINATION ${PYTHON_SITE}/${PROJECT_NAME})
+            LIBRARY DESTINATION "${PYTHON_INSTALL_DIR}/${PROJECT_NAME}")
 
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     pybind11_add_module(pytimeline pyTimeline.cpp)
-    target_link_libraries(pytimeline PUBLIC phase_manager)
+    target_link_libraries(pytimeline PUBLIC ${LIBRARY_TARGET_NAME})
     install(TARGETS pytimeline
-            DESTINATION ${PYTHON_SITE}/${PROJECT_NAME})
+            LIBRARY DESTINATION "${PYTHON_INSTALL_DIR}/${PROJECT_NAME}")
 
     pybind11_add_module(pymanager pyPhaseManager.cpp)
-    target_link_libraries(pymanager PUBLIC phase_manager)
+    target_link_libraries(pymanager PUBLIC ${LIBRARY_TARGET_NAME})
     install(TARGETS pymanager
-            DESTINATION ${PYTHON_SITE}/${PROJECT_NAME})
+            LIBRARY DESTINATION "${PYTHON_INSTALL_DIR}/${PROJECT_NAME}")
 
-    # pyrosserver requires ROS — only build it when catkin is available
-    if(catkin_FOUND)
+    if(TARGET phase_manager_ros)
         pybind11_add_module(pyrosserver pyRosServer.cpp)
-        target_link_libraries(pyrosserver PUBLIC phase_manager_ros ${catkin_LIBRARIES})
+        target_link_libraries(pyrosserver PUBLIC phase_manager_ros)
         install(TARGETS pyrosserver
-                DESTINATION ${PYTHON_SITE}/${PROJECT_NAME})
-        message(STATUS "[phase_manager/python] pyrosserver enabled (ROS found)")
+                LIBRARY DESTINATION "${PYTHON_INSTALL_DIR}/${PROJECT_NAME}")
+        message(STATUS "[phase_manager/python] pyrosserver enabled")
     else()
-        message(STATUS "[phase_manager/python] pyrosserver SKIPPED (ROS not found)")
+        message(STATUS "[phase_manager/python] pyrosserver SKIPPED")
     endif()
 
-    install(FILES __init__.py DESTINATION ${PYTHON_SITE}/${PROJECT_NAME})
 #    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 #    pybind11_add_module(pyphase_manager pyPhaseManager.cpp)
 #    target_link_libraries(pyci PRIVATE phase_manager)

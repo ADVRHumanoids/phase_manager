@@ -1,22 +1,37 @@
-import rospy
+import time
+
+import rclpy
+from rclpy.node import Node
 from phase_manager.msg import Timeline, TimelineArray
-class TimelineROS:
+
+
+class TimelineROS(Node):
 
     def __init__(self):
+        if not rclpy.ok():
+            rclpy.init(args=None)
 
-        rospy.init_node('timeline_visualizer')
+        super().__init__('timeline_visualizer')
         self.topic_name = '/phase_manager/timelines'
 
         self.timelines = dict()
+        self._received_first_msg = False
 
         self.__init_ros_callback()
 
     def __init_ros_callback(self):
 
-        rospy.Subscriber(self.topic_name, TimelineArray, self.timeline_callback)
-        rospy.wait_for_message(self.topic_name, TimelineArray, timeout=1)
+        self.subscription = self.create_subscription(TimelineArray, self.topic_name, self.timeline_callback, 10)
+
+        deadline = time.monotonic() + 1.0
+        while rclpy.ok() and not self._received_first_msg and time.monotonic() < deadline:
+            rclpy.spin_once(self, timeout_sec=0.1)
+
+    def spin_once(self, timeout_sec=0.0):
+        rclpy.spin_once(self, timeout_sec=timeout_sec)
 
     def timeline_callback(self, msg: TimelineArray):
+        self._received_first_msg = True
 
         for timeline in msg.timelines:
             self.timelines[timeline.name] = []

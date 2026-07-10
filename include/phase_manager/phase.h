@@ -4,11 +4,14 @@
 #include <phase_manager/horizon_interface.h>
 
 #include <Eigen/Dense>
+#include <algorithm>
 #include <numeric>
 #include <vector>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <unordered_map>
 #include <unordered_set>
 //#include <any>
 //#include <variant>

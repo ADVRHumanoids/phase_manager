@@ -2,10 +2,12 @@
 #define HORIZON_INTERFACE_H
 
 #include <Eigen/Dense>
+#include <algorithm>
 #include <vector>
 #include <memory>
 #include <set>
 #include <iostream>
+#include <string>
 
 // synthesis of what I need from the items in Horizon
 class ItemBase
